@@ -107,13 +107,18 @@ export default function DashboardLibrarian() {
     setLoading(false);
   };
 
-  const startEditing = (book) => {
-    setEditingBook(book);
-    setTitle(book.title);
-    setAuthor(book.author);
-    setCategory(book.category);
-    setPreview(book.coverImage ? `http://localhost:5000/${book.coverImage}` : null);
-  };
+ const startEditing = (book) => {
+  setEditingBook(book);
+  setTitle(book.title);
+  setAuthor(book.author);
+  setCategory(book.category);
+  setPreview(
+    book.coverImage
+      ? `https://bookstorebackend-8ke2.onrender.com/${book.coverImage}`
+      : null
+  );
+};
+
 
   const resetForm = () => {
     setEditingBook(null);
@@ -211,7 +216,7 @@ export default function DashboardLibrarian() {
               <div className="h-48 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
                 {book.coverImage ? (
                   <img
-                    src={`http://localhost:5000/${book.coverImage}`}
+                    src={`https://bookstorebackend-8ke2.onrender.com/${book.coverImage}`}
                     alt={book.title}
                     className="w-full h-full object-cover"
                   />

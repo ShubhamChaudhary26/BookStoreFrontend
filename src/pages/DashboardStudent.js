@@ -176,7 +176,7 @@ export default function DashboardStudent() {
                 <div className="h-56 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
                   {book.coverImage ? (
                     <img
-                      src={`http://localhost:5000/${book.coverImage}`}
+                     src={`https://bookstorebackend-8ke2.onrender.com/${book.coverImage}`}
                       alt={book.title}
                       className="w-full h-full object-cover"
                     />

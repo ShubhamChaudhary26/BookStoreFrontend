@@ -71,7 +71,7 @@ export default function Books() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h2 className="text-3xl font-bold mb-6 text-center text-green-700">
-        📚 Book Catalog
+         Book Catalog
       </h2>
 
       {/* 🔍 Search & Sort */}
@@ -115,7 +115,7 @@ export default function Books() {
             <div className="h-56 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
               {book.coverImage ? (
                 <img
-                  src={`http://localhost:5000/${book.coverImage}`}
+                  src={`https://bookstorebackend-8ke2.onrender.com/${book.coverImage}`}
                   alt={book.title}
                   className="w-full h-full object-cover"
                 />
