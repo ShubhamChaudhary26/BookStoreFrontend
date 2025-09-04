@@ -1,11 +1,11 @@
-# 📚 Student Library Management System – Frontend
+#  Student Library Management System – Frontend
 
 This is the **frontend** of the Student Library Management System, built with **React + TailwindCSS**.  
 It allows **students** and **librarians** to interact with the system through role-based dashboards.  
 
 ---
 
-## 🚀 Features (As per task PDF)
+##  Features (As per task PDF)
 - User Authentication (Login/Register with JWT)
 - Role-based dashboards:
   - **Student Dashboard**
