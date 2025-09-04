@@ -1,8 +1,7 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api", 
-});
+const API = axios.create({ baseURL: "https://bookstorebackend-8ke2.onrender.com/api" });
+
 
 // Token middleware
 API.interceptors.request.use((req) => {
