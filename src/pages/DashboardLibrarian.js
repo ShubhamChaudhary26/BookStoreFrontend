@@ -309,7 +309,7 @@ export default function DashboardLibrarian() {
                 <div className="h-48 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
                   {b.book.coverImage ? (
                     <img
-                      src={`http://localhost:5000/${b.book.coverImage}`}
+                     src={`https://bookstorebackend-8ke2.onrender.com/${b.book.coverImage}`}
                       alt={b.book.title}
                       className="w-full h-full object-cover"
                     />
