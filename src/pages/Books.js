@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import API from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast"; //  Import toast
 
 export default function Books() {
   const { user } = useContext(AuthContext);
@@ -18,6 +19,7 @@ export default function Books() {
         setBooks(res.data);
       } catch (err) {
         console.error(err);
+        toast.error(" Failed to load books");
       }
     };
     fetchBooks();
@@ -26,34 +28,36 @@ export default function Books() {
   const handleBorrow = async (bookId) => {
     try {
       await API.post(`/borrow/${bookId}`);
-      alert("Book borrowed!");
+      toast.success(" Book borrowed!");
       setBooks((prev) =>
         prev.map((b) => (b._id === bookId ? { ...b, available: false } : b))
       );
     } catch (err) {
-      alert(err.response?.data?.message || "Error borrowing book");
+      toast.error(err.response?.data?.message || " Error borrowing book");
     }
   };
 
   const handleDelete = async (bookId) => {
-    if (!window.confirm("Are you sure you want to delete this book?")) return;
+    const confirmDelete = window.confirm("Are you sure you want to delete this book?");
+    if (!confirmDelete) return;
+
     try {
       await API.delete(`/books/${bookId}`);
-      alert("Book deleted!");
+      toast.success(" Book deleted!");
       setBooks((prev) => prev.filter((b) => b._id !== bookId));
     } catch (err) {
-      alert(err.response?.data?.message || "Error deleting book");
+      toast.error(err.response?.data?.message || " Error deleting book");
     }
   };
 
-  // 🔍 Filter
+  //  Filter
   const filteredBooks = books.filter((book) =>
     `${book.title} ${book.author} ${book.category}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
-  // 🔽 Sort
+  //  Sort
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     let aValue = a[sortField]?.toString().toLowerCase() || "";
     let bValue = b[sortField]?.toString().toLowerCase() || "";
@@ -62,7 +66,7 @@ export default function Books() {
     return 0;
   });
 
-  // 📄 Pagination
+  // Pagination
   const indexOfLast = currentPage * booksPerPage;
   const indexOfFirst = indexOfLast - booksPerPage;
   const currentBooks = sortedBooks.slice(indexOfFirst, indexOfLast);
@@ -71,14 +75,14 @@ export default function Books() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h2 className="text-3xl font-bold mb-6 text-center text-green-700">
-         Book Catalog
+        Book Catalog
       </h2>
 
-      {/* 🔍 Search & Sort */}
+      {/* Search & Sort */}
       <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
         <input
           type="text"
-          placeholder=" Search by title, author, or category..."
+          placeholder="Search by title, author, or category..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:w-1/2 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-green-400"
@@ -104,14 +108,14 @@ export default function Books() {
         </div>
       </div>
 
-      {/* 📚 Books Grid */}
+      {/*  Books Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {currentBooks.map((book) => (
           <div
             key={book._id}
             className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 h-full"
           >
-            {/* 📘 Book Cover */}
+            {/*  Book Cover */}
             <div className="h-56 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
               {book.coverImage ? (
                 <img
@@ -144,7 +148,7 @@ export default function Books() {
                 {book.available ? "Available" : "Borrowed"}
               </span>
 
-              {/* Push buttons to bottom */}
+              {/* Buttons */}
               <div className="mt-auto flex gap-2">
                 {user.role === "student" && book.available && (
                   <button

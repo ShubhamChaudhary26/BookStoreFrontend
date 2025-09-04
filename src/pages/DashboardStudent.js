@@ -1,12 +1,13 @@
 import { useEffect, useState, useContext } from "react";
-import API from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
+import API from "../api/axios";
+import toast from "react-hot-toast";
 
 export default function DashboardStudent() {
   const { user } = useContext(AuthContext);
   const [books, setBooks] = useState([]);
   const [borrowed, setBorrowed] = useState([]);
-  const [history, setHistory] = useState([]); // ✅ Borrow history
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -26,50 +27,42 @@ export default function DashboardStudent() {
 
       const borrowedRes = await API.get("/borrow/my");
       const borrowedData = borrowedRes.data || [];
-      setBorrowed(borrowedData.filter((b) => !b.returnDate)); // only active
-
-      setHistory(borrowedData.filter((b) => b.returnDate)); // ✅ returned books
+      setBorrowed(borrowedData.filter((b) => !b.returnDate));
+      setHistory(borrowedData.filter((b) => b.returnDate));
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load data");
     }
   };
 
   const handleBorrow = async (bookId) => {
     setLoading(true);
     try {
-      const res = await API.post(`/borrow/${bookId}`);
-      alert(" Book borrowed!");
+      await API.post(`/borrow/${bookId}`);
+      toast.success("Book borrowed successfully");
       fetchAllData();
     } catch (err) {
-      alert(err.response?.data?.message || "Error borrowing book");
+      toast.error(err.response?.data?.message || "Error borrowing book");
     }
     setLoading(false);
   };
 
- const handleReturn = async (borrowId) => {
-  setLoading(true);
-  try {
-    const res = await API.put(`/borrow/return/${borrowId}`);
-    const { fine } = res.data; // ✅ fine from backend
-
-    if (fine > 0) {
-      alert(`Book returned with fine: ₹${fine}`);
-    } else {
-      alert(" Book returned on time!");
+  const handleReturn = async (borrowId) => {
+    setLoading(true);
+    try {
+      const res = await API.put(`/borrow/return/${borrowId}`);
+      const { fine } = res.data;
+      if (fine > 0) {
+        toast.error(`Book returned with fine: ₹${fine}`);
+      } else {
+        toast.success("Book returned successfully");
+      }
+      fetchAllData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Error returning book");
     }
-
-    // refresh lists
-    const borrowedRes = await API.get("/borrow/my");
-    setBorrowed(borrowedRes.data);
-
-    const booksRes = await API.get("/books");
-    setBooks(booksRes.data || []);
-  } catch (err) {
-    alert(err.response?.data?.message || "Error returning book");
-  }
-  setLoading(false);
-};
-
+    setLoading(false);
+  };
 
   // 🔍 Search + Sort
   const filteredBooks = books
@@ -91,12 +84,10 @@ export default function DashboardStudent() {
   const currentBooks = filteredBooks.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
 
-  // 🔔 Overdue warning check
-  const overdueBooks = borrowed.filter(
-    (b) => new Date(b.dueDate) < new Date()
-  );
+  // 🔔 Overdue warning
+  const overdueBooks = borrowed.filter((b) => new Date(b.dueDate) < new Date());
 
-  // 📊 Dashboard stats
+  // 📊 Stats
   const stats = {
     totalBooks: books.length,
     borrowedCount: borrowed.length,
@@ -111,40 +102,39 @@ export default function DashboardStudent() {
         Welcome, {user?.name || "Student"}
       </h1>
 
-      {/* 📊 Stats Cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="p-4 bg-green-100 rounded-xl text-center">
+        <div className="p-4 bg-green-100 rounded-xl text-center shadow">
           <p className="text-lg font-bold">{stats.totalBooks}</p>
           <p className="text-sm text-gray-600">Total Books</p>
         </div>
-        <div className="p-4 bg-blue-100 rounded-xl text-center">
+        <div className="p-4 bg-blue-100 rounded-xl text-center shadow">
           <p className="text-lg font-bold">{stats.borrowedCount}</p>
           <p className="text-sm text-gray-600">Borrowed</p>
         </div>
-        
-        <div className="p-4 bg-red-100 rounded-xl text-center">
+        <div className="p-4 bg-red-100 rounded-xl text-center shadow">
           <p className="text-lg font-bold">{stats.overdueCount}</p>
           <p className="text-sm text-gray-600">Overdue</p>
         </div>
-        <div className="p-4 bg-yellow-100 rounded-xl text-center">
+        <div className="p-4 bg-yellow-100 rounded-xl text-center shadow">
           <p className="text-lg font-bold">₹{stats.totalFines}</p>
           <p className="text-sm text-gray-600">Total Fines</p>
         </div>
       </div>
 
-      {/* 🔔 Overdue Warning */}
+      {/* Overdue Warning */}
       {overdueBooks.length > 0 && (
-        <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-xl">
-          ⚠️ You have {overdueBooks.length} overdue book
-          {overdueBooks.length > 1 ? "s" : ""}. Please return them ASAP!
+        <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-xl shadow">
+          You have {overdueBooks.length} overdue book
+          {overdueBooks.length > 1 ? "s" : ""}. Please return them as soon as possible.
         </div>
       )}
 
-      {/* 🔍 Search + Sort */}
+      {/* Search + Sort */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <input
           type="text"
-          placeholder=" Search by title, author, or category..."
+          placeholder="Search by title, author, or category..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-green-400"
@@ -160,7 +150,7 @@ export default function DashboardStudent() {
         </select>
       </div>
 
-      {/* 📚 Available Books */}
+      {/* Available Books */}
       <h2 className="text-2xl font-semibold mb-6 text-green-600">
         Available Books
       </h2>
@@ -171,12 +161,12 @@ export default function DashboardStudent() {
             .map((book) => (
               <div
                 key={book._id}
-                className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 h-full"
+                className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow hover:shadow-lg transition-transform transform hover:-translate-y-1"
               >
-                <div className="h-56 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
+                <div className="h-56 w-full overflow-hidden rounded-t-2xl">
                   {book.coverImage ? (
                     <img
-                     src={`https://bookstorebackend-8ke2.onrender.com/${book.coverImage}`}
+                      src={`https://bookstorebackend-8ke2.onrender.com/${book.coverImage}`}
                       alt={book.title}
                       className="w-full h-full object-cover"
                     />
@@ -211,7 +201,7 @@ export default function DashboardStudent() {
         )}
       </div>
 
-      {/* 📄 Pagination */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mb-10">
           <button
@@ -244,7 +234,7 @@ export default function DashboardStudent() {
         </div>
       )}
 
-      {/* 📕 Borrowed Books */}
+      {/* Borrowed Books */}
       <h2 className="text-2xl font-semibold mb-6 text-green-600">
         My Borrowed Books
       </h2>
@@ -253,13 +243,12 @@ export default function DashboardStudent() {
           borrowed.map((b) => (
             <div
               key={b._id}
-              className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 h-full"
+              className="flex flex-col bg-white border border-gray-200 rounded-2xl shadow hover:shadow-lg transition-transform transform hover:-translate-y-1"
             >
-              <div className="h-56 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
+              <div className="h-56 w-full overflow-hidden rounded-t-2xl">
                 {b.book?.coverImage ? (
                   <img
                     src={`https://bookstorebackend-8ke2.onrender.com/${b.book.coverImage}`}
-
                     alt={b.book?.title || "Book"}
                     className="w-full h-full object-cover"
                   />
@@ -300,7 +289,7 @@ export default function DashboardStudent() {
         )}
       </div>
 
-      {/* 📜 Borrow History */}
+      {/* Borrow History */}
       <h2 className="text-2xl font-semibold mb-6 text-purple-600">
         Borrow History
       </h2>

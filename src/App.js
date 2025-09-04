@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "react-hot-toast"; //  Add this
 
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -18,6 +19,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Navbar />
+        {/*  Toast Notification Container */}
+        <Toaster position="top-center" reverseOrder={false} />  
+
         <Routes>
           {/* Public */}
           <Route path="/" element={<Navigate to="/login" />} />
@@ -68,4 +72,4 @@ function App() {
   );
 }
 
-export default App;   // 👈 don’t forget this
+export default App;

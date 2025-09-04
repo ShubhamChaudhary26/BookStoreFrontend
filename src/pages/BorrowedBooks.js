@@ -1,51 +1,52 @@
 import { useEffect, useState, useContext } from "react";
 import API from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast"; // ✅ Import toast
 
 export default function BorrowedBooks() {
   const { user } = useContext(AuthContext);
   const [borrowed, setBorrowed] = useState([]);
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("dueDate"); 
-  const [sortOrder, setSortOrder] = useState("asc"); 
-  const [currentPage, setCurrentPage] = useState(1); 
+  const [sortField, setSortField] = useState("dueDate");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const fetchBorrowed = async () => {
+    try {
+      const url = user.role === "student" ? "/borrow/my" : "/borrow/all";
+      const res = await API.get(url);
+
+      const data =
+        user.role === "student"
+          ? res.data.filter((b) => !b.returnDate)
+          : res.data;
+
+      setBorrowed(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load borrowed books");
+    }
+  };
+
   useEffect(() => {
-    const fetchBorrowed = async () => {
-      try {
-        const url = user.role === "student" ? "/borrow/my" : "/borrow/all";
-        const res = await API.get(url);
-
-        const data =
-          user.role === "student"
-            ? res.data.filter((b) => !b.returnDate)
-            : res.data;
-
-        setBorrowed(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
     fetchBorrowed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.role]);
 
   const handleReturn = async (borrowId) => {
     try {
       await API.put(`/borrow/return/${borrowId}`);
-      alert("Book returned!");
-
-      // ✅ Re-fetch to keep fines/overdue updated
-      const res = await API.get("/borrow/my");
-      setBorrowed(res.data);
+      toast.success("Book returned successfully");
+      fetchBorrowed(); // ✅ Refresh list
     } catch (err) {
-      alert(err.response?.data?.message || "Error returning book");
+      toast.error(err.response?.data?.message || "Error returning book");
     }
   };
 
-  // 🔍 Filter & Sort
+  // 🔍 Filter & Sort (SAFE)
   const filtered = borrowed.filter((b) =>
-    `${b.book.title} ${b.book.author} ${b.student?.name || ""}`
+    `${b.book?.title || ""} ${b.book?.author || ""} ${b.student?.name || ""}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
@@ -74,16 +75,14 @@ export default function BorrowedBooks() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h2 className="text-3xl font-bold mb-6 text-center text-green-700">
-        {user.role === "student"
-          ? " My Borrowed Books"
-          : " All Borrowed Books"}
+        {user.role === "student" ? "My Borrowed Books" : "All Borrowed Books"}
       </h2>
 
       {/* Search & Sort */}
       <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
         <input
           type="text"
-          placeholder=" Search by book, author, or student..."
+          placeholder="Search by book, author, or student..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:w-1/2 px-4 py-2 border rounded-xl focus:ring-2 focus:ring-green-400"
@@ -124,8 +123,7 @@ export default function BorrowedBooks() {
                 <div className="h-48 w-full overflow-hidden rounded-t-2xl flex-shrink-0">
                   {b.book?.coverImage ? (
                     <img
-                     src={`https://bookstorebackend-8ke2.onrender.com/${b.book.coverImage}`}
-
+                      src={`https://bookstorebackend-8ke2.onrender.com/${b.book.coverImage}`}
                       alt={b.book?.title || "Book"}
                       className="w-full h-full object-cover"
                     />
@@ -139,21 +137,24 @@ export default function BorrowedBooks() {
                 {/* Book Info */}
                 <div className="flex flex-col flex-grow p-4">
                   <h3 className="font-bold text-lg line-clamp-1">
-                    {b.book.title}
+                    {b.book?.title || "Untitled"}
                   </h3>
                   <p className="text-sm text-gray-600 line-clamp-1">
-                    By {b.book.author}
+                    By {b.book?.author || "Unknown"}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Due: {new Date(b.dueDate).toLocaleDateString()}
+                    Due:{" "}
+                    {b.dueDate
+                      ? new Date(b.dueDate).toLocaleDateString()
+                      : "N/A"}
                   </p>
 
-                  {/* ✅ Overdue/Fine Status */}
+                  {/* Overdue/Fine Status */}
                   {user.role === "student" && (
                     <>
                       {b.isOverdue ? (
                         <p className="text-sm font-semibold text-red-600">
-                          Overdue! Fine so far: ₹{b.fine}
+                          Overdue! Fine so far: ₹{b.fine || 0}
                         </p>
                       ) : (
                         <p className="text-sm font-semibold text-green-600">
@@ -169,11 +170,13 @@ export default function BorrowedBooks() {
                         b.isOverdue ? "text-red-600" : "text-green-600"
                       }`}
                     >
-                      {b.isOverdue ? `Overdue (₹${b.fine})` : "On Time"}
+                      {b.isOverdue
+                        ? `Overdue (₹${b.fine || 0})`
+                        : "On Time"}
                     </p>
                   )}
 
-                  {/* ✅ Push button to bottom */}
+                  {/* Return Button */}
                   {user.role === "student" && !b.returnDate && (
                     <button
                       onClick={() => handleReturn(b._id)}
