@@ -205,7 +205,7 @@ export default function DashboardLibrarian() {
       />
 
       {/* All Books */}
-      <h2 className="text-2xl font-semibold mb-4 text-green-600">📖 All Books</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-green-600"> All Books</h2>
       {filteredBooks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {filteredBooks.map((book) => (
